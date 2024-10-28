@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String            @id @default(uuid())
+  email           String            @unique
+  password        String
+  name            String
+  isActive        Boolean           @default(true)
+  isSuperuser     Boolean           @default(false)
+  isStaff         Boolean           @default(false)
+  dateJoined      DateTime          @default(now())
+  lastLogin       DateTime?
+  role            String
+  usuarioOnline   Boolean           @default(false)
+  messages        Message[]
+  rooms           Room[]
+  RoomParticipant RoomParticipant[]
+
+  @@map("account_user")
+}
+
+model Message {
+  id          Int           @id @default(autoincrement())
+  body        String
+  createdAt   DateTime      @default(now())
+  createdBy   User?         @relation(fields: [createdById], references: [id])
+  createdById String?
+  rooms       RoomMessage[]
+
+  read     Boolean @default(false)
+  type     String?
+  metadata String?
+
+  @@map("chat_message")
+}
+
+model Room {
+  id                    Int           @id @default(autoincrement())
+  uuid                  String        @unique
+  client                String
+  url                   String?
+  status                String
+  createdAt             DateTime      @default(now())
+  agent                 User?         @relation(fields: [agentId], references: [id])
+  agentId               String?
+  evento                String?
+  local                 String?
+  arquivado             Int           @default(0)
+  nivelGravidade        Int           @default(0)
+  usuarioOnline         Int           @default(0)
+  eventoAtivo           Int           @default(0)
+  ultimaMensagem        DateTime      @default(now())
+  accesstimeAgent       DateTime      @default(now())
+  funcionario           Int           @default(0)
+  novaConversa          Int           @default(0)
+  ultimaMensagemUsuario DateTime?
+  ultimaMensagemAgente  DateTime?
+  relatorio             String        @default("")
+  messages              RoomMessage[]
+
+  participants RoomParticipant[]
+  isGroup      Boolean           @default(false)
+  name         String?
+  lastMessage  String?
+
+  @@map("chat_room")
+}
+
+model RoomMessage {
+  id        Int     @id @default(autoincrement())
+  room      Room    @relation(fields: [roomId], references: [id])
+  roomId    Int
+  message   Message @relation(fields: [messageId], references: [id])
+  messageId Int
+
+  @@unique([roomId, messageId])
+  @@map("chat_room_messages")
+}
+
+model RoomParticipant {
+  id       String    @id @default(uuid())
+  room     Room      @relation(fields: [roomId], references: [id])
+  roomId   Int
+  user     User      @relation(fields: [userId], references: [id])
+  userId   String
+  joinedAt DateTime  @default(now())
+  leftAt   DateTime?
+  isAdmin  Boolean   @default(false)
+
+  @@unique([roomId, userId])
+  @@map("chat_room_participants")
+}
