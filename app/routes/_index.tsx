@@ -10,10 +10,12 @@ import {
 	Search,
 	Send,
 	Smile,
+	LogOut,
 } from 'lucide-react';
 import { useSocket } from '~/context';
 import { LoaderFunctionArgs, json } from '@remix-run/node';
 import { requireUserId } from '~/utils/auth.server';
+import { Form } from '@remix-run/react';
 
 type Chat = {
 	id: number;
@@ -140,6 +142,11 @@ export default function Index() {
 						<AvatarFallback>YA</AvatarFallback>
 					</Avatar>
 					<div className="flex space-x-2">
+						<Form method="POST" action="/logout">
+							<Button variant="ghost" size="icon" type="submit">
+								<LogOut className="h-5 w-5" />
+							</Button>
+						</Form>
 						<Button variant="ghost" size="icon">
 							<MoreVertical className="h-5 w-5" />
 						</Button>

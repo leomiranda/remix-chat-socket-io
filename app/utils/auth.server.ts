@@ -67,7 +67,6 @@ export async function login({
 	password: string;
 }) {
 	const user = await verifyUserPassword({ email }, password);
-	console.log('🚀 ~ user:', user);
 	if (!user) return null;
 	const session = await prisma.session.create({
 		select: { id: true, expirationDate: true, userId: true },
