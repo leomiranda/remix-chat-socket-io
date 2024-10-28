@@ -12,6 +12,8 @@ import {
 	Smile,
 } from 'lucide-react';
 import { useSocket } from '~/context';
+import { LoaderFunctionArgs, json } from '@remix-run/node';
+import { requireUserId } from '~/utils/auth.server';
 
 type Chat = {
 	id: number;
@@ -86,6 +88,11 @@ const chats = [
 // 		time: '10:34 AM',
 // 	},
 // ];
+
+export async function loader({ request }: LoaderFunctionArgs) {
+	const userId = await requireUserId(request);
+	return json({ userId });
+}
 
 export default function Index() {
 	const socket = useSocket();
