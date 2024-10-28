@@ -21,6 +21,13 @@ type Chat = {
 	unread: number;
 };
 
+type Message = {
+	id: number;
+	sender: string;
+	content: string;
+	time: string;
+};
+
 const chats = [
 	{
 		id: 1,
@@ -52,61 +59,66 @@ const chats = [
 	},
 ];
 
-const messages = [
-	{ id: 1, sender: 'Alice', content: 'Hey, how are you?', time: '10:30 AM' },
-	{
-		id: 2,
-		sender: 'You',
-		content: "I'm good, thanks! How about you?",
-		time: '10:31 AM',
-	},
-	{
-		id: 3,
-		sender: 'Alice',
-		content: "I'm doing well too. Any plans for the weekend?",
-		time: '10:32 AM',
-	},
-	{
-		id: 4,
-		sender: 'You',
-		content: 'Not yet. Maybe we could grab coffee?',
-		time: '10:33 AM',
-	},
-	{
-		id: 5,
-		sender: 'Alice',
-		content: 'Sounds great! How about Saturday afternoon?',
-		time: '10:34 AM',
-	},
-];
+// const messages = [
+// 	{ id: 1, sender: 'Alice', content: 'Hey, how are you?', time: '10:30 AM' },
+// 	{
+// 		id: 2,
+// 		sender: 'You',
+// 		content: "I'm good, thanks! How about you?",
+// 		time: '10:31 AM',
+// 	},
+// 	{
+// 		id: 3,
+// 		sender: 'Alice',
+// 		content: "I'm doing well too. Any plans for the weekend?",
+// 		time: '10:32 AM',
+// 	},
+// 	{
+// 		id: 4,
+// 		sender: 'You',
+// 		content: 'Not yet. Maybe we could grab coffee?',
+// 		time: '10:33 AM',
+// 	},
+// 	{
+// 		id: 5,
+// 		sender: 'Alice',
+// 		content: 'Sounds great! How about Saturday afternoon?',
+// 		time: '10:34 AM',
+// 	},
+// ];
 
 export default function Index() {
 	const socket = useSocket();
 	const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+	const [messages, setMessages] = useState<Message[]>([]);
+	const [newMessage, setNewMessage] = useState('');
 
 	useEffect(() => {
 		if (!socket) return;
 
-		socket.on('event', (data) => {
-			console.log(data);
+		socket.on('receiveMessage', (message) => {
+			setMessages((prevMessages) => [...prevMessages, message]);
 		});
 
-		socket.emit('event', 'ping');
+		return () => {
+			socket.off('receiveMessage');
+		};
 	}, [socket]);
 
-	// return (
-	// 	<div>
-	// 		<h1 className="text-3xl font-bold underline">
-	// 			Welcome to Remix + Socket.io
-	// 		</h1>
-	// 		<div>
-	// 			<button type="button" onClick={() => socket?.emit('event', 'ping')}>
-	// 				Send ping
-	// 			</button>
-	// 		</div>
-	// 		<p>See Browser console and Server terminal</p>
-	// 	</div>
-	// );
+	const handleSendMessage = () => {
+		if (newMessage.trim() === '') return;
+
+		const message = {
+			id: Date.now(),
+			sender: 'You',
+			content: newMessage,
+			time: new Date().toLocaleTimeString(),
+		};
+
+		setMessages((prevMessages) => [...prevMessages, message]);
+		socket?.emit('sendMessage', message);
+		setNewMessage('');
+	};
 
 	return (
 		<div className="flex h-screen bg-gray-100">
@@ -115,7 +127,7 @@ export default function Index() {
 				<div className="p-4 bg-gray-200 flex justify-between items-center">
 					<Avatar>
 						<AvatarImage
-							src="/placeholder.svg?height=40&width=40"
+							src={`https://ui-avatars.com/api/?name=User&background=random&size=40`}
 							alt="Your avatar"
 						/>
 						<AvatarFallback>YA</AvatarFallback>
@@ -145,9 +157,7 @@ export default function Index() {
 						>
 							<Avatar>
 								<AvatarImage
-									src={`/placeholder.svg?height=40&width=40&text=${chat.name.charAt(
-										0
-									)}`}
+									src={`https://ui-avatars.com/api/?name=${chat.name}&background=random&size=40`}
 									alt={chat.name}
 								/>
 								<AvatarFallback>{chat.name.charAt(0)}</AvatarFallback>
@@ -187,9 +197,7 @@ export default function Index() {
 						</Button>
 						<Avatar>
 							<AvatarImage
-								src={`/placeholder.svg?height=40&width=40&text=${selectedChat.name.charAt(
-									0
-								)}`}
+								src={`https://ui-avatars.com/api/?name=${selectedChat.name}&background=random&size=40`}
 								alt={selectedChat.name}
 							/>
 							<AvatarFallback>{selectedChat.name.charAt(0)}</AvatarFallback>
@@ -241,8 +249,14 @@ export default function Index() {
 						<Button variant="ghost" size="icon">
 							<Paperclip className="h-5 w-5" />
 						</Button>
-						<Input placeholder="Type a message" className="flex-1" />
-						<Button size="icon">
+						<Input
+							placeholder="Type a message"
+							className="flex-1"
+							value={newMessage}
+							onChange={(e) => setNewMessage(e.target.value)}
+							onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+						/>
+						<Button size="icon" onClick={handleSendMessage}>
 							<Send className="h-5 w-5" />
 						</Button>
 					</div>
