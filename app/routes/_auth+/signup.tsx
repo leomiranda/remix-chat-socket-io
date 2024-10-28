@@ -63,7 +63,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const response = await sendEmail({
 		to: email,
-		subject: `Welcome to Epic Notes!`,
+		subject: `Welcome to Remix Chat!`,
 		react: <SignupEmail onboardingUrl={verifyUrl.toString()} otp={otp} />,
 	});
 
@@ -92,7 +92,7 @@ export function SignupEmail({
 		<Html lang="en" dir="ltr">
 			<Container>
 				<h1>
-					<Text>Welcome to Epic Notes!</Text>
+					<Text>Welcome to Remix Chat!</Text>
 				</h1>
 				<p>
 					<Text>
